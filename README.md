@@ -18,7 +18,7 @@ FastM8 is a Progressive Web App (PWA) designed to help users track their fasting
 
 - React/Vue (TBD)
 - Service Workers (for PWA support)
-- GitHub Pages / Vercel / Netlify for hosting
+- GitHub Pages
 
 ### Backend (FastM8-Backend)
 
@@ -30,7 +30,7 @@ FastM8 is a Progressive Web App (PWA) designed to help users track their fasting
 ## Repository Structure
 
 ```
-fastm8-frontend/  (React/Vue PWA)
+fastm8-frontend/  (Vue PWA)
 fastm8-backend/   (Node.js API + SQLite)
 ```
 
