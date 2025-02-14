@@ -40,7 +40,7 @@ fastm8-backend/   (Node.js API + SQLite)
 
 1. Clone the backend repository:
    ```sh
-   git clone https://github.com/your-username/fastm8-backend.git
+   git clone https://github.com/mattattaq/fastm8-backend.git
    ```
 2. Install dependencies:
    ```sh
@@ -56,7 +56,7 @@ fastm8-backend/   (Node.js API + SQLite)
 
 1. Clone the frontend repository:
    ```sh
-   git clone https://github.com/your-username/fastm8-frontend.git
+   git clone https://github.com/mattattaq/fastm8-frontend.git
    ```
 2. Install dependencies:
    ```sh
@@ -79,11 +79,12 @@ fastm8-backend/   (Node.js API + SQLite)
 
 ## Roadmap
 
-- [ ] Implement fasting timer UI.
-- [ ] Add push notification support.
+- [x] Deploy backend to Raspberry Pi.
+- [x] Add push notification support.
+- [x] Add Users
 - [ ] Store user fasting history.
-- [ ] Improve UI/UX design.
-- [ ] Deploy backend to Raspberry Pi.
+- [ ] Add Postman to repo
+- [ ] _OPTIONAL_ Add tokenization or solution to not send raw passwords in request. Maybe JWT token, I haven't decided yet.
 
 ## Contributing
 
