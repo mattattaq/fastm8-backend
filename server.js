@@ -6,7 +6,7 @@ const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Use a port from .env or default to 3000
+const PORT = process.env.PORT || 3001; // Use a port from .env or default to 3001
 
 // Middleware
 app.use(cors()); // Allow requests from frontend
@@ -20,22 +20,27 @@ const db = new sqlite3.Database("./fastm8.db", (err) => {
     console.log("Connected to SQLite database.");
     db.run(
       `CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
-          )`
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+      )`
     );
   }
 });
 
-// Create a simple table if it doesn't exist
+// Create fast_logs table if it doesn't exist
 db.run(
-  `CREATE TABLE IF NOT EXISTS fast_sessions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        start_time TEXT NOT NULL,
-        end_time TEXT
-    )`
+  `CREATE TABLE IF NOT EXISTS fast_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER,
+    startTime TEXT NOT NULL,
+    endTime TEXT,
+    duration INTEGER,
+    isComplete BOOLEAN,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES users(id)
+  )`
 );
 
 // Test route to check if backend is running
@@ -53,10 +58,8 @@ app.post("/api/users", async (req, res) => {
 
   try {
     const saltRounds = 10; // Define the salt rounds
-    // Inside your POST /api/users route
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Insert user into database
     const query = `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`;
     db.run(query, [username, email, hashedPassword], function (err) {
       if (err) {
@@ -77,7 +80,6 @@ app.post("/api/login", (req, res) => {
     return res.status(400).json({ error: "Email and password are required." });
   }
 
-  // Find user by email
   const query = `SELECT * FROM users WHERE email = ?`;
   db.get(query, [email], async (err, user) => {
     if (err) {
@@ -87,13 +89,63 @@ app.post("/api/login", (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Compare hashed password
     const match = await bcrypt.compare(password, user.password);
     if (match) {
       res.json({ message: "Login successful", username: user.username });
     } else {
       res.status(401).json({ error: "Invalid email or password" });
     }
+  });
+});
+
+// API Route to log fasting session
+app.post("/log", (req, res) => {
+  const { userId, startTime, endTime, duration, isComplete } = req.body;
+
+  if (
+    !userId ||
+    !startTime ||
+    (isComplete && !endTime) ||
+    (isComplete && !duration)
+  ) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const query = `INSERT INTO fast_logs (userId, startTime, endTime, duration, isComplete) 
+                 VALUES (?, ?, ?, ?, ?)`;
+  db.run(
+    query,
+    [userId, startTime, endTime, duration, isComplete],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: "Failed to log fasting session" });
+      }
+      res.status(201).json({
+        message: "Fasting session logged successfully",
+        fastId: this.lastID,
+      });
+    }
+  );
+});
+
+// Get open fasting logs by userId (where isComplete is false)
+app.get("/api/open-logs", (req, res) => {
+  const userId = req.query.userId; // Get userId from query parameters
+
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required." });
+  }
+
+  const query = `SELECT * FROM fast_logs WHERE userId = ? AND isComplete = false`;
+
+  db.all(query, [userId], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: "Database error" });
+    }
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No open fasting logs found" });
+    }
+    res.json(rows); // Return all open fasting logs for the user
   });
 });
 
