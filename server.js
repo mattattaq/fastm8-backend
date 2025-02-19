@@ -182,6 +182,83 @@ app.get("/api/open-logs", (req, res) => {
   });
 });
 
+// API Route to edit fasting logs
+app.put("/api/logs/edit", (req, res) => {
+  const { logIds, edits } = req.body;
+
+  // Log the received data for debugging purposes
+  console.log("Received data:", req.body);
+
+  // Validate the input
+  if (!logIds || !edits || logIds.length !== edits.length) {
+    return res.status(400).json({
+      error: "logIds and edits must have the same length.",
+      receivedLogIdsLength: logIds.length,
+      receivedEditsLength: edits.length,
+    });
+  }
+
+  // Loop over each logId and apply corresponding edits
+  const updatePromises = logIds.map((logId, index) => {
+    const edit = edits[index]; // Get the edit for the current logId
+    const { startTime, endTime, isComplete } = edit;
+
+    // Build the SET clause dynamically based on which fields are provided
+    let updateFields = [];
+    let values = [];
+
+    if (startTime) {
+      updateFields.push("startTime = ?");
+      values.push(startTime);
+    }
+
+    if (endTime) {
+      updateFields.push("endTime = ?");
+      values.push(endTime);
+    }
+
+    if (isComplete !== undefined) {
+      updateFields.push("isComplete = ?");
+      values.push(isComplete);
+    }
+
+    // If no fields to update, skip this logId
+    if (updateFields.length === 0) {
+      return Promise.resolve(0); // No updates, resolve with 0 changes
+    }
+
+    // Combine the updateFields and logId into the SQL query
+    const query = `UPDATE fast_logs SET ${updateFields.join(
+      ", "
+    )} WHERE id = ?`;
+
+    // Execute the update query
+    return new Promise((resolve, reject) => {
+      db.run(query, [...values, logId], function (err) {
+        if (err) {
+          reject(err); // Reject the promise if an error occurs
+        } else {
+          resolve(this.changes); // Resolve with the number of affected rows
+        }
+      });
+    });
+  });
+
+  // Wait for all update promises to complete
+  Promise.all(updatePromises)
+    .then((results) => {
+      // Count the number of successful updates
+      const updatedLogsCount = results.filter((changes) => changes > 0).length;
+      res
+        .status(200)
+        .json({ message: `${updatedLogsCount} logs updated successfully.` });
+    })
+    .catch((error) => {
+      console.error("Error updating logs:", error);
+      res.status(500).json({ error: "Error updating logs" });
+    });
+});
+
 // API Route to delete fasting logs by userId
 app.delete("/api/logs", (req, res) => {
   const userId = req.query.userId; // Get userId from query parameters
