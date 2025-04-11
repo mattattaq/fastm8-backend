@@ -145,10 +145,37 @@ app.post("/api/logs", (req, res) => {
 
 app.get("/api/open-logs", (req, res) => {
   const token = req.headers["authorization"]; // Get Authorization header
+  const { startTime, endTime } = req.query; // Get date range parameters
 
   // Check if token is provided
   if (!token) {
     return res.status(403).json({ error: "No token provided" });
+  }
+
+  // Validate date format if provided
+  const isValidDate = (dateString) => {
+    if (!dateString) return true;
+
+    // Check for full ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)
+    const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+    // Check for date-only format (YYYY-MM-DD)
+    const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+    return isoRegex.test(dateString) || dateOnlyRegex.test(dateString);
+  };
+
+  if (startTime && !isValidDate(startTime)) {
+    return res.status(400).json({
+      error:
+        "Invalid startTime format. Expected either YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ",
+    });
+  }
+
+  if (endTime && !isValidDate(endTime)) {
+    return res.status(400).json({
+      error:
+        "Invalid endTime format. Expected either YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ",
+    });
   }
 
   // Extract the token (Bearer token)
@@ -167,17 +194,32 @@ app.get("/api/open-logs", (req, res) => {
       return res.status(400).json({ error: "userId is required" });
     }
 
-    // Query to get open logs (where isComplete is false)
-    const query = `SELECT * FROM fast_logs WHERE userId = ? AND isComplete = false`;
+    // Build the query based on whether date range parameters are provided
+    let query = `SELECT * FROM fast_logs WHERE userId = ? AND isComplete = false`;
+    const queryParams = [userId];
 
-    db.all(query, [userId], (err, rows) => {
+    if (startTime) {
+      query += ` AND startTime >= ?`;
+      queryParams.push(startTime);
+    }
+
+    if (endTime) {
+      query += ` AND startTime <= ?`;
+      queryParams.push(endTime);
+    }
+
+    // Order by startTime in descending order (most recent first)
+    query += ` ORDER BY startTime DESC`;
+
+    db.all(query, queryParams, (err, rows) => {
       if (err) {
+        console.error("Database error:", err);
         return res.status(500).json({ error: "Database error" });
       }
       if (rows.length === 0) {
         return res.status(200).json({ message: "No open fasting logs found" });
       }
-      res.json(rows); // Return all open fasting logs for the user
+      res.json(rows); // Return all open fasting logs for the user within the date range
     });
   });
 });
@@ -287,6 +329,8 @@ app.delete("/api/logs", (req, res) => {
     });
   });
 });
+
+// timerange
 
 // Start the Express server
 app.listen(PORT, () => {
