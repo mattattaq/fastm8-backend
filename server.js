@@ -195,7 +195,7 @@ app.get("/api/open-logs", (req, res) => {
     }
 
     // Build the query based on whether date range parameters are provided
-    let query = `SELECT * FROM fast_logs WHERE userId = ? AND isComplete = false`;
+    let query = `SELECT * FROM fast_logs WHERE userId = ?`;
     const queryParams = [userId];
 
     if (startTime) {
@@ -217,9 +217,9 @@ app.get("/api/open-logs", (req, res) => {
         return res.status(500).json({ error: "Database error" });
       }
       if (rows.length === 0) {
-        return res.status(200).json({ message: "No open fasting logs found" });
+        return res.status(200).json({ message: "No fasting logs found" });
       }
-      res.json(rows); // Return all open fasting logs for the user within the date range
+      res.json(rows); // Return all fasting logs for the user within the date range
     });
   });
 });
