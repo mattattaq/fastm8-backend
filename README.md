@@ -100,7 +100,7 @@ For endpoints accepting dates, use either:
 - [x] Deploy backend to Raspberry Pi.
 - [x] Add push notification support.
 - [x] Add Users
-- [ ] Store user fasting history.
+- [x] Store user fasting history.
 - [ ] Add Postman to repo
 - [ ] _OPTIONAL_ Add tokenization or solution to not send raw passwords in request. Maybe JWT token, I haven't decided yet.
 
