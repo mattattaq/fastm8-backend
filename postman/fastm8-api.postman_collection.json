@@ -1,0 +1,217 @@
+{
+	"info": {
+		"_postman_id": "fastm8-api-collection",
+		"name": "FastM8 API",
+		"description": "API collection for FastM8 fasting tracker application",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"]
+						},
+						"description": "Create a new user account"
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "login"]
+						},
+						"description": "Login and get JWT token"
+					}
+				}
+			]
+		},
+		{
+			"name": "Fasting Logs",
+			"item": [
+				{
+					"name": "Create Log",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": 1,\n    \"startTime\": \"2024-04-11T10:00:00.000Z\",\n    \"isComplete\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/logs",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logs"]
+						},
+						"description": "Create a new fasting log"
+					}
+				},
+				{
+					"name": "Get Open Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/open-logs?startTime=2024-04-01&endTime=2024-04-11",
+							"host": ["{{base_url}}"],
+							"path": ["api", "open-logs"],
+							"query": [
+								{
+									"key": "startTime",
+									"value": "2024-04-01"
+								},
+								{
+									"key": "endTime",
+									"value": "2024-04-11"
+								}
+							]
+						},
+						"description": "Get open fasting logs with optional date range"
+					}
+				},
+				{
+					"name": "Edit Logs",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"logIds\": [1, 2],\n    \"edits\": [\n        {\n            \"startTime\": \"2024-04-11T10:00:00.000Z\",\n            \"endTime\": \"2024-04-11T18:00:00.000Z\",\n            \"isComplete\": true\n        },\n        {\n            \"startTime\": \"2024-04-12T10:00:00.000Z\",\n            \"isComplete\": false\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/logs/edit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logs", "edit"]
+						},
+						"description": "Edit multiple fasting logs"
+					}
+				},
+				{
+					"name": "Delete Logs",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/logs?userId=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logs"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Delete open fasting logs for a user"
+					}
+				}
+			]
+		},
+		{
+			"name": "Status",
+			"item": [
+				{
+					"name": "Check Status",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["status"]
+						},
+						"description": "Check if the API is running"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		}
+	]
+} 
